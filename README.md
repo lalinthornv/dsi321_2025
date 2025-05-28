@@ -66,9 +66,9 @@ DSI321_2025/
 
 ## การติดตั้งและตั้งค่า
 **1. Clone Repository (ถ้ามี) หรือบันทึกไฟล์สคริปต์:**
-# ถ้าเป็น Repository  
-# git clone <repository_url>  
-# cd <repository_directory>  
+* #ถ้าเป็น Repository  
+* #git clone <repository_url>  
+* #cd <repository_directory>  
 
 **2. สร้าง Virtual Environment (แนะนำ):**
 ```bash
