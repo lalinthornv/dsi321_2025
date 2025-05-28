@@ -4,7 +4,7 @@
 
 สคริปต์ถูกออกแบบมาให้สามารถทำงานได้อย่างต่อเนื่อง เพื่อเก็บข้อมูลใหม่ตามช่วงเวลาที่กำหนด
 
-## Project Directory Overview
+## โครงสร้างโปรเจค
 
 ```
 DSI321_2025/
@@ -28,66 +28,60 @@ DSI321_2025/
 
 ```
 
-## Technologies and Tools
+## คุณสมบัติเด่น
 
-* **Web Scraping:** Selenium with webdriver_manager
-* **Data Validation:** Pydantic
-* **Data Storage:** lakeFS
-* **Workflow Management:** Prefect
-* **Interactive Dashboard:** Streamlit
-* **Automation / CI/CD**  GitHub Actions
+* **การดึงข้อมูลจากเว็บไซต์:** ดึงข้อมูลตัวเลขการผลิตไฟฟ้าล่าสุดและอุณหภูมิ
+* **วิเคราะห์ Console Log:** มีวิธีการเฉพาะในการดึงข้อมูลจากข้อความใน JavaScript Console Log ทำให้ไม่ต้องจัดการกับโครงสร้าง HTML ที่ซับซ้อน
+* **ทำงานแบบ Headless:** ใช้ Selenium กับ Chrome ในโหมด Headless (ไม่มีหน้าจอ) เพื่อการทำงานเบื้องหลังอย่างมีประสิทธิภาพ
+* **จัดการ ChromeDriver อัตโนมัติ:** ผสานการทำงานกับ webdriver-manager เพื่อดาวน์โหลดและจัดการเวอร์ชันของ ChromeDriver ให้อัตโนมัติ
+* **บันทึกข้อมูลเป็น CSV:** ต่อท้ายข้อมูลใหม่ลงในไฟล์ CSV (สร้างไฟล์ใหม่หากยังไม่มี) พร้อมทั้งบันทึกเวลาที่ทำการดึงข้อมูล (timestamp)
+* **ดึงข้อมูลต่อเนื่อง:**  สามารถทำงานไปเรื่อยๆ เพื่อเก็บข้อมูลตามช่วงเวลาที่ผู้ใช้กำหนด
+* **การบันทึก Log:**  มีการบันทึก Log การทำงานเพื่อดีบักการทำงานของสคริปต์และปัญหาที่อาจเกิดขึ้น
 
-## System Requirements
-* Docker-enabled environment
-* Internet connectivity (for accessing EGAT website)
-* Minimum of 4 GB RAM
-* Available port for Prefect UI (default: localhost:4200)
 
-## Setup Instructions
-1. **1. Create and Activate a Virtual Environment:**
+## หลักการทำงาน
+
+เว็บไซต์ https://www.sothailand.com/sysgen/egat/ ดูเหมือนจะอัปเดตข้อมูลที่แสดงผล (กำลังการผลิตปัจจุบันหน่วยเป็น MW และอุณหภูมิ) ผ่าน JavaScript ซึ่ง JavaScript นี้ก็จะส่งข้อความการอัปเดตไปยัง Console ของเบราว์เซอร์ด้วย สคริปต์นี้ใช้ประโยชน์จากพฤติกรรมดังกล่าว:
+
+1. **1. เริ่มต้น WebDriver:** ตั้งค่าและเปิดเบราว์เซอร์ Chrome ในโหมด Headless ผ่าน Selenium และเปิดใช้งาน goog:loggingPrefs เพื่อเก็บ Log จาก Console ของเบราว์เซอร์
+
+2. **2.เปิด URL เป้าหมาย:** เปิดหน้าเว็บ กฟผ. ที่ระบุ
+
+3. **3.รอข้อมูล:** หยุดรอสักครู่เพื่อให้หน้าเว็บโหลดสมบูรณ์และ JavaScript ทำงาน
+
+4. **4.ดึงข้อมูลจาก Console:** เรียกดู Log จาก Console ของเบราว์เซอร์ และค้นหาข้อความที่มีรูปแบบ updateMessageArea:
+
+5. **แยกส่วนข้อมูล:** ใช้ Regular Expression เพื่อแยกส่วนข้อมูลที่เกี่ยวข้อง (เช่น รหัสวันที่, เวลา, ค่า MW ปัจจุบัน, อุณหภูมิ) ออกจากข้อความ Log ที่ตรงกัน
+
+6. **6.บันทึกลง CSV:** จัดรูปแบบข้อมูลที่ดึงมาได้พร้อมกับ scrape_time (เวลาที่ดึงข้อมูล) ให้อยู่ในรูป Dictionary และบันทึกเป็นแถวใหม่ต่อท้ายไฟล์ CSV ที่กำหนด
+
+7. **7.ทำงานวนซ้ำ (ทางเลือก):** หากมีการเปิดใช้ scrape_continuously สคริปต์จะทำซ้ำขั้นตอนที่ 2–6 ตามช่วงเวลาที่กำหนด
+
+8. **8.ปิด WebDriver:** ปิดการทำงานของเบราว์เซอร์ Driver อย่างถูกต้องเมื่อสิ้นสุดการทำงานเสร็จหรือถูกขัดจังหวะ
+
+## สิ่งที่ต้องมีก่อนเริ่มใช้งาน
+Python 3.7 ขึ้นไป
+ติดตั้งเบราว์เซอร์ Google Chrome
+ 
+
+## การติดตั้งและตั้งค่า
+1. **1. Clone Repository (ถ้ามี) หรือบันทึกไฟล์สคริปต์:**
+# ถ้าเป็น Repository  
+# git clone <repository_url>  
+# cd <repository_directory>  
+
+2. **2. สร้าง Virtual Environment (แนะนำ):**
 ```bash
 python -m venv .venv
-
-# Windows
-.\.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
+source .venv/bin/activate #สำหรับ Windows:  .\.venv\Scripts\activate
 ```
-
-2. **Install Required Dependencies:**
+3. **3.ติดตั้ง Package ที่จำเป็น:**
 ```bash
-# Windows
-pip install -r test-scraping\requirements.txt
-
-# macOS/Linux
-pip install -r test-scraping/requirements.txt
+pandas
+selenium
+webdriver-manager
 ```
-
-## Using Prefect for Workflow Management
-Setting Up Deployment
-To build Docker images, push them to a registry, and pull for execution, use:
-
-If you encounter issues with PREFECT_API_URL, configure it as follows:
+## จากนั้นรันคำสั่ง
 ```bash
-# Windows
-$env:PREFECT_API_URL = "http://127.0.0.1:4200/api"
-
-# macOS/Linux
-export PREFECT_API_URL="http://127.0.0.1:4200/api"
-```
-
-Then run:
-```bash
-prefect deploy
-```
-
-Start a worker to fetch jobs from the specified pool and queue:
-```bash
-prefect worker start --pool 'default-agent-pool' --work-queue 'default'
-```
-
-## Launching the Streamlit Dashboard
-```bash
-streamlit run UI/streamlit_app.py
+pip install -r requirements.txt
 ```

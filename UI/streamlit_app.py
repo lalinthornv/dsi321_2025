@@ -62,8 +62,8 @@ def load_data_from_lakefs(s3_path, storage_opts):
 
 def create_sidebar():
     auto_refresh = st.sidebar.checkbox('Enable Auto-refresh', value=True)
-    refresh_interval = st.sidebar.slider('Refresh Interval (s)', 5, 120, REFRESH_INTERVAL_DEFAULT)
-    contamination_factor = st.sidebar.slider('Anomaly Sensitivity (%)', 1, 25, ANOMALY_SENSITIVITY_DEFAULT) / 100
+    refresh_interval = st.sidebar.slider('Refresh Interval (s)', 5, 150, REFRESH_INTERVAL_DEFAULT)
+    contamination_factor = st.sidebar.slider('Anomaly Sensitivity (%)', 1, 35, ANOMALY_SENSITIVITY_DEFAULT) / 100
     st.sidebar.caption(f"UTC: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     return auto_refresh, refresh_interval, contamination_factor
 
@@ -72,22 +72,22 @@ def display_metrics(latest_data_row, anomaly_status):
     power = latest_data_row.get(POWER_COLUMN, "N/A")
     temp = latest_data_row.get(TEMP_COLUMN, "N/A")
     disp_time = latest_data_row.get(DISPLAY_TIME_COLUMN, "N/A")
-    col1.metric("⚡ Power Output", f"{power:,.1f} MW" if pd.notna(power) else "N/A")
-    col2.metric("🌡️ Temperature", f"{temp:.1f}°C" if pd.notna(temp) else "N/A")
-    col3.metric("🕒 Source Time", str(disp_time))
-    col4.error("⚠️ Anomaly" if anomaly_status else "✅ Normal")
+    col1.metric("Power Output", f"{power:,.1f} MW" if pd.notna(power) else "N/A")
+    col2.metric("Temperature", f"{temp:.1f}°C" if pd.notna(temp) else "N/A")
+    col3.metric("Source Time", str(disp_time))
+    col4.error("Anomaly" if anomaly_status else "✅ Normal")
 
 def display_charts(chart_data):
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
-        st.subheader(f"⚡ {POWER_COLUMN}")
-        st.line_chart(chart_data.set_index(TIMESTAMP_COLUMN)[POWER_COLUMN], height=300)
+        st.subheader(f"{POWER_COLUMN}")
+        st.line_chart(chart_data.set_index(TIMESTAMP_COLUMN)[POWER_COLUMN], height=250)
     with chart_col2:
-        st.subheader(f"🌡️ {TEMP_COLUMN}")
-        st.line_chart(chart_data.set_index(TIMESTAMP_COLUMN)[TEMP_COLUMN], height=300)
+        st.subheader(f"{TEMP_COLUMN}")
+        st.line_chart(chart_data.set_index(TIMESTAMP_COLUMN)[TEMP_COLUMN], height=250)
 
 def display_statistics(anomalies, chart_data):
-    st.subheader("📊 Chart Data Statistics")
+    st.subheader("Chart Data Statistics")
     cols = st.columns(4)
     total_anomalies = anomalies.sum()
     anomaly_rate = (total_anomalies / len(anomalies)) * 100 if len(anomalies) > 0 else 0
@@ -99,7 +99,7 @@ def display_statistics(anomalies, chart_data):
     cols[3].metric("Peak Power", f"{peak_power:,.1f} MW")
 
 def display_recent_data_table(df_all_data, anomalies):
-    st.subheader("📝 Recent Data (Latest 10)")
+    st.subheader("Recent Data (Latest 10)")
     df_display = df_all_data.head(10).copy()
     df_display['Status'] = ['⚠️ Anomaly' if anom else '✅ Normal' for anom in anomalies[:len(df_display)]]
     cols = [TIMESTAMP_COLUMN, DISPLAY_TIME_COLUMN, POWER_COLUMN, TEMP_COLUMN, 'Status']
